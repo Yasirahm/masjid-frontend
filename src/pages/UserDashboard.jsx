@@ -8,6 +8,7 @@ const UserDashboard = () => {
   const [user, setUser] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const navigate = useNavigate();
+  const [showAllPayments, setShowAllPayments] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -116,22 +117,32 @@ const UserDashboard = () => {
 
       <div className="mt-8">
         <h3 className="text-lg font-bold text-gray-700 mb-2">📜 Payment History / ادائیگی کی تفصیل</h3>
-        {user.paymentHistory && user.paymentHistory.length > 0 ? (
-          <ul className="list-disc list-inside space-y-1 text-black text-sm">
-            {user.paymentHistory.map((entry, i) => (
-              <li key={i}>
-                ₹{entry.amount} —{" "}
-                {new Date(entry.date).toLocaleString("en-IN", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}{" "}
-                {entry.razorpayId ? ` (ID: ${entry.razorpayId})` : ""}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-800">No payments yet. / ابھی تک کوئی ادائیگی نہیں ہوئی</p>
-        )}
+       {user.paymentHistory && user.paymentHistory.length > 0 ? (
+  <>
+    <ul className="list-disc list-inside space-y-1 text-black text-sm">
+      {(showAllPayments ? user.paymentHistory : user.paymentHistory.slice(0, 5)).map((entry, i) => (
+        <li key={i}>
+          ₹{entry.amount} —{" "}
+          {new Date(entry.date).toLocaleString("en-IN", {
+            dateStyle: "short",
+            timeStyle: "short",
+          })}{" "}
+          {entry.razorpayId ? ` (ID: ${entry.razorpayId})` : ""}
+        </li>
+      ))}
+    </ul>
+    {user.paymentHistory.length > 5 && (
+      <button
+        onClick={() => setShowAllPayments(!showAllPayments)}
+        className="text-blue-600 bg-white text-sm mt-2 underline"
+      >
+        {showAllPayments ? "Show Less / کم دکھائیں" : "See More / مزید دیکھیں"}
+      </button>
+    )}
+  </>
+) : (
+  <p className="text-gray-800">No payments yet. / ابھی تک کوئی ادائیگی نہیں ہوئی</p>
+)}
       </div>
 
       <button

@@ -21,6 +21,9 @@ const AdminPanel = () => {
   const [showMoreMap, setShowMoreMap] = useState({});
   const [monthlyAmount, setMonthlyAmount] = useState(500); // default monthly update
   const [perFamilyRate, setPerFamilyRate] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+const [sortDescending, setSortDescending] = useState(false);
+
 
   const getAllUsers = async () => {
     try {
@@ -86,7 +89,13 @@ const AdminPanel = () => {
         setEditUserId(null);
       } else {
         await axios.post("https://masjid-backend-rt9x.onrender.com/api/users/add", payload);
-        alert("User added successfully");
+        Swal.fire({
+  icon: "success",
+  title: "✅ User Added",
+  text: "The user has been successfully added to the list.",
+  confirmButtonColor: "#3085d6",
+});
+
       }
 
       setForm({
@@ -213,6 +222,25 @@ const AdminPanel = () => {
           <h3 className="text-lg sm:text-xl text-black font-semibold mb-4 text-center">
             📋 All Registered Users
           </h3>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+  {/* Search Bar */}
+  <input
+    type="text"
+    placeholder="Search by name, email or phone"
+    className="p-2 border rounded w-full sm:w-1/2"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+  />
+
+  {/* Sort Toggle */}
+  <button
+    onClick={() => setSortDescending(!sortDescending)}
+    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md"
+  >
+    {sortDescending ? "🔽 Sort: High to Low" : "🔼 Sort: Low to High"}
+  </button>
+</div>
+
           {users.length === 0 ? (
             <p className="text-center text-gray-600">No users found.</p>
           ) : (
@@ -228,46 +256,57 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <React.Fragment key={u._id}>
-                      <tr className="hover:bg-gray-50 transition">
-                        <td className="border px-3 py-2 font-medium">{u.name}</td>
-                        <td className="border px-3 py-2">{u.email}</td>
-                        <td className="border px-3 py-2">{u.phone}</td>
-                        <td className="border px-3 py-2">{u.familyMembers}</td>
-                        <td className="border px-3 py-2">₹{u.totalAmount}</td>
-                        <td className="border px-3 py-2">₹{u.paidAmount}</td>
-                        <td className="border px-3 py-2">₹{u.remainingAmount}</td>
-                        <td className="border px-3 py-2 space-x-2">
-                          <button onClick={() => handleEdit(u)} className="text-blue-600 underline">Edit</button>
-                          <button onClick={() => handleDelete(u._id)} className="text-red-600 underline">Delete</button>
-                        </td>
-                      </tr>
-                      {u.paymentHistory?.length > 0 && (
-                        <tr className="bg-gray-50">
-                          <td colSpan="8" className="border px-4 py-3">
-                            <p className="font-semibold mb-2">🧾 Payment History:</p>
-                            <ul className="list-disc pl-4 text-sm space-y-1">
-                              {(showMoreMap[u._id] ? u.paymentHistory : u.paymentHistory.slice(0, 2)).map((p, idx) => (
-                                <li key={idx}>
-                                  ₹{p.amount} — {new Date(p.date).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })} {p.razorpayId ? `— ID: ${p.razorpayId}` : ""}
-                                </li>
-                              ))}
-                            </ul>
-                            {u.paymentHistory.length > 2 && (
-                              <button
-                                onClick={() => toggleShowMore(u._id)}
-                                className="text-blue-500 text-xs underline mt-2 block"
-                              >
-                                {showMoreMap[u._id] ? "Show Less" : "Show More"}
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
+  {users
+    .filter((u) =>
+      u.name.toLowerCase().includes(searchQuery) ||
+      u.email.toLowerCase().includes(searchQuery) ||
+      u.phone.toLowerCase().includes(searchQuery)
+    )
+    .sort((a, b) => {
+      if (sortDescending) return b.remainingAmount - a.remainingAmount;
+      else return a.remainingAmount - b.remainingAmount;
+    })
+    .map((u) => (
+      <React.Fragment key={u._id}>
+        <tr className="hover:bg-gray-50 transition">
+          <td className="border px-3 py-2 font-medium">{u.name}</td>
+          <td className="border px-3 py-2">{u.email}</td>
+          <td className="border px-3 py-2">{u.phone}</td>
+          <td className="border px-3 py-2">{u.familyMembers}</td>
+          <td className="border px-3 py-2">₹{u.totalAmount}</td>
+          <td className="border px-3 py-2">₹{u.paidAmount}</td>
+          <td className="border px-3 py-2">₹{u.remainingAmount}</td>
+          <td className="border px-3 py-2 space-x-2">
+            <button onClick={() => handleEdit(u)} className="text-blue-600 underline">Edit</button>
+            <button onClick={() => handleDelete(u._id)} className="text-red-600 underline">Delete</button>
+          </td>
+        </tr>
+        {u.paymentHistory?.length > 0 && (
+          <tr className="bg-gray-50">
+            <td colSpan="8" className="border px-4 py-3">
+              <p className="font-semibold mb-2">🧾 Payment History:</p>
+              <ul className="list-disc pl-4 text-sm space-y-1">
+                {(showMoreMap[u._id] ? u.paymentHistory : u.paymentHistory.slice(0, 2)).map((p, idx) => (
+                  <li key={idx}>
+                    ₹{p.amount} — {new Date(p.date).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })} {p.razorpayId ? `— ID: ${p.razorpayId}` : ""}
+                  </li>
+                ))}
+              </ul>
+              {u.paymentHistory.length > 2 && (
+                <button
+                  onClick={() => toggleShowMore(u._id)}
+                  className="text-blue-500 text-xs underline mt-2 block"
+                >
+                  {showMoreMap[u._id] ? "Show Less" : "Show More"}
+                </button>
+              )}
+            </td>
+          </tr>
+        )}
+      </React.Fragment>
+    ))}
+</tbody>
+
               </table>
             </div>
           )}
