@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import Footer from "../components/Footer";
 
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
@@ -143,6 +144,7 @@ const UserDashboard = () => {
         Logout / لاگ آؤٹ
       </button>
     </div>
+    <Footer/>
   </div>
 );
   }
